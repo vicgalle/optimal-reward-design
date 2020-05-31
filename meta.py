@@ -5,10 +5,10 @@ class SGD(Module):
     lr : Parameter
     x0 : Parameter
 
-    def __init__(self):
+    def __init__(self, lr, x0):
         super().__init__()
-        self.lr = 0.1
-        self.x0 = 0.5
+        self.lr = lr
+        self.x0 = x0
 
     def forward(self, input):
         x = self.x0
@@ -16,9 +16,12 @@ class SGD(Module):
         g_loss = jax.grad(loss)
         for _ in range(T):
             x = x - self.lr * g_loss(x)
-        return x
+        return loss(x)
 
-sgd = SGD()
+lr = 0.1
+x0 = 0.5
+
+sgd = SGD(lr, x0)
 print(sgd)
 
 T = 2
@@ -26,9 +29,8 @@ def inner_loss(x):
     return jax.numpy.sum(x ** 2)
 
 for i in range(10):
-
     # Jax style grad compute -> tree-shaped immutable
-    l = inner_loss(sgd((T, inner_loss)))
+    l = sgd((T, inner_loss))
     print(l, sgd.lr, sgd.x0)
 
     g = sgd.grad((T, inner_loss))
